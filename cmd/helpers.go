@@ -5,7 +5,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/seme4eg/sadbot/stream"
+	"github.com/stompzone/sadbot/stream"
 )
 
 // reply to context channel with message msg. Delete previous bot message to

@@ -2,7 +2,7 @@ package session
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/seme4eg/sadbot/stream"
+	"github.com/stompzone/sadbot/stream"
 )
 
 type Session struct {

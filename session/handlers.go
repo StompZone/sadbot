@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/seme4eg/sadbot/cmd"
+	"github.com/stompzone/sadbot/cmd"
 )
 
 // ready is a handler for the "ready" event from Discord

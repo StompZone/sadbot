@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/seme4eg/sadbot/utils"
+	"github.com/stompzone/sadbot/utils"
 	"strings"
 )
 

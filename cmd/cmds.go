@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/seme4eg/sadbot/stream"
+	"github.com/stompzone/sadbot/stream"
 
 	"github.com/bwmarrin/discordgo"
 )

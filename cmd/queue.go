@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/seme4eg/sadbot/paginator"
+	"github.com/stompzone/sadbot/paginator"
 	"math"
 
 	"github.com/bwmarrin/discordgo"

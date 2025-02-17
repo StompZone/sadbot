@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/seme4eg/sadbot/session"
-	"github.com/seme4eg/sadbot/utils"
+	"github.com/stompzone/sadbot/session"
+	"github.com/stompzone/sadbot/utils"
 )
 
 func main() {
