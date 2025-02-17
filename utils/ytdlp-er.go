@@ -3,11 +3,12 @@ package utils
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -20,40 +21,33 @@ type YtResult struct {
 	Url      string  `json:"webpage_url"`
 }
 
+var youtubeRegex = regexp.MustCompile(`(?i)^((?:https?:)?\/\/)?((?:www|m(usic)?)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/.*)?$`)
+
 // ProcessQuery determines the type of given query - urls or search.
-// Gets information from yt-dlp on each url / search and returns as a slice
-// of parsed results.
 func ProcessQuery(query string) ([]YtResult, error) {
 	t, err := QueryType(query)
 	if err != nil {
-		return []YtResult{}, err
+		return nil, err
 	}
 
 	switch t {
 	case "search":
-		tracks, err := Get(query)
-		if err != nil {
-			return []YtResult{}, err
-		}
-		return tracks, nil
+		return Get(query)
 	case "urls":
-		// fetch info on each url in query (can be one url as well)
-		res := []YtResult{}
-		for _, url := range strings.Fields(query) {
-			tracks, err := Get(url)
+		var res []YtResult
+		for _, u := range strings.Fields(query) {
+			tracks, err := Get(u)
 			if err != nil {
-				fmt.Println("Failed to fetch", url)
+				fmt.Println("Failed to fetch", u)
 				continue
 			}
 			res = append(res, tracks...)
 		}
 		return res, nil
 	}
-	return []YtResult{}, errors.New("something went wrong when determining query type")
+	return nil, errors.New("unable to determine query type")
 }
 
-// QueryType checks if all whitespace-separated strings are either urls or just
-// strings returns false in case there's a mix of both.
 func QueryType(query string) (string, error) {
 	allUrls := true
 	allWords := true
@@ -73,76 +67,74 @@ func QueryType(query string) (string, error) {
 	return "", errors.New("either all arguments must be urls or none")
 }
 
-// IsUrl determines if given string is a url.
 func IsUrl(link string) bool {
 	parsedURL, err := url.ParseRequestURI(link)
-	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
-		return false
-	} else {
-		return true
-	}
+	return err == nil && parsedURL.Scheme != "" && parsedURL.Host != ""
 }
 
-// Get calls yt-dlp and gets information on provided query, which can also be a
-// playlist, which is why it returns a slice
 func Get(query string) ([]YtResult, error) {
-	// default search to "ytsearch" to keep things simple
-	// as an option - in the future allow user to specify search method
-	// like "ytsearch : search query" maybe
-	ytDlp := exec.Command("yt-dlp", "--flat-playlist", "--default-search",
-		"ytsearch", "--print", "%(.{title,uploader,duration,webpage_url})j", query)
-	var out bytes.Buffer
+	ytDlp := exec.Command("yt-dlp", "--default-search", "ytsearch",
+		"--print", "%(title)s|%(uploader)s|%(duration)s|%(webpage_url)s", query)
+
+	var out, outErr bytes.Buffer
 	ytDlp.Stdout = &out
+	ytDlp.Stderr = &outErr
 	err := ytDlp.Run()
 	if err != nil {
-		return []YtResult{}, err
+		fmt.Println("yt-dlp error:", outErr.String())
+		return nil, err
 	}
 
-	tracks := []YtResult{}
+	var tracks []YtResult
 	scanner := bufio.NewScanner(&out)
 	for scanner.Scan() {
-		track := YtResult{}
-		err = json.Unmarshal(scanner.Bytes(), &track)
-		if err != nil {
-			return []YtResult{}, err
+		parts := strings.Split(scanner.Text(), "|")
+		if len(parts) < 4 {
+			continue
+		}
+		duration, _ := strconv.ParseFloat(parts[2], 32)
+		track := YtResult{
+			Title:    parts[0],
+			Uploader: parts[1],
+			Duration: float32(duration),
+			Url:      parts[3],
 		}
 		tracks = append(tracks, track)
 	}
 
 	var wg sync.WaitGroup
 
-	// FIXME: if no title in output then prob given link was soundcloud playlist
-	// then we need to fetch info track by track. Maybe there is a way to fetch
-	// needed playlist info with only 1 command, but for now i haven't found how.
 	for i, t := range tracks {
 		track := t
 		index := i
-		if track.Title == "" {
+		if track.Title == "" && youtubeRegex.MatchString(track.Url) {
 			wg.Add(1)
-
 			go func() {
-				ytDlp := exec.Command("yt-dlp", "--flat-playlist", "--default-search",
-					"ytsearch", "--print", "%(.{title,uploader,duration,webpage_url})j", track.Url)
+				defer wg.Done()
+				ytDlp := exec.Command("yt-dlp", "--default-search", "ytsearch",
+					"--print", "%(title)s|%(uploader)s|%(duration)s|%(webpage_url)s", track.Url)
 				var out bytes.Buffer
 				ytDlp.Stdout = &out
-				err := ytDlp.Run()
-				if err != nil {
-					fmt.Printf("Error processing %s : %s", track.Url, err)
+				if err := ytDlp.Run(); err != nil {
+					fmt.Printf("Error processing %s : %s\n", track.Url, err)
+					return
 				}
-				err = json.Unmarshal(out.Bytes(), &track)
-				if err != nil {
-					fmt.Printf("Error unmarshaling response for %s : %s", track.Url, err)
+				parts := strings.Split(out.String(), "|")
+				if len(parts) < 4 {
+					return
 				}
-				if track.Uploader != "" {
-					track.Title = track.Uploader + " – " + track.Title
+				duration, _ := strconv.ParseFloat(parts[2], 32)
+				track = YtResult{
+					Title:    parts[0],
+					Uploader: parts[1],
+					Duration: float32(duration),
+					Url:      parts[3],
 				}
 				tracks[index] = track
-				defer wg.Done()
 			}()
 		}
 	}
 
 	wg.Wait()
-
 	return tracks, nil
 }
