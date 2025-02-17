@@ -9,10 +9,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -80,7 +80,7 @@ func PlayAudioFile(v *discordgo.VoiceConnection, source string, stop <-chan bool
 			return err
 		}
 		go func() {
-			if err := ytdlp.Wait(); err != nil && !errors.Is(err, exec.ErrProcessDone) {
+			if err := ytdlp.Wait(); err != nil && err.Error() != "exec: process already finished" {
 				fmt.Println("yt-dlp process exited with error:", err)
 			}
 		}()

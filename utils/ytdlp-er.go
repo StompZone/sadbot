@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,8 +19,6 @@ type YtResult struct {
 	Duration float32 `json:"duration"`
 	Url      string  `json:"webpage_url"`
 }
-
-var youtubeRegex = regexp.MustCompile(`(?i)^((?:https?:)?\/\/)?((?:www|m(usic)?)\.)?((?:youtube(?:-nocookie)?\.com|youtu.be))(\/.*)?$`)
 
 // ProcessQuery determines the type of given query - urls or search.
 func ProcessQuery(query string) ([]YtResult, error) {
@@ -107,7 +104,7 @@ func Get(query string) ([]YtResult, error) {
 	for i, t := range tracks {
 		track := t
 		index := i
-		if track.Title == "" && youtubeRegex.MatchString(track.Url) {
+		if track.Title == "" && IsUrl(track.Url) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
