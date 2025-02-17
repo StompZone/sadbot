@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"time"
+	"fmt"
 	"github.com/stompzone/sadbot/utils"
 	"strings"
 )
