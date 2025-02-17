@@ -35,7 +35,7 @@ func Queue(ctx Ctx) {
 			float64(i+perPage),
 			float64(len(ctx.stream().Queue))))
 
-		for j := i; j <= maxLen; j++ {
+		for j := i; j < maxLen; j++ {
 			formatName := "**%s** – %s"
 			// change page & format for current song
 			if j == ctx.stream().SongIndex {
