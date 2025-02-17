@@ -1,6 +1,6 @@
 /config.yml
-/vendor/
-!/vendor/layeh.com/
-!/vendor/layeh.com/gopus/
+/vendor/*
+!/vendor/layeh.com
+!/vendor/layeh.com/**
 sadbot
 sadbot.exe
