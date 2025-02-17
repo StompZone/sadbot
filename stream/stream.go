@@ -3,7 +3,7 @@ package stream
 import (
 	"errors"
 	"fmt"
-	"github.com/seme4eg/sadbot/utils"
+	"github.com/stompzone/sadbot/utils"
 	"math/rand"
 	"sort"
 	"sync"
