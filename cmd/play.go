@@ -48,6 +48,7 @@ func Play(ctx Ctx) {
 	go Queue(ctx)
 
 	if err := ctx.stream().Play(); err != nil {
+		ctx.reply("Error streaming: " + err.Error())
 		fmt.Println("Error streaming:", err)
 	}
 }

@@ -33,7 +33,7 @@ func Queue(ctx Ctx) {
 		// maximum amount of tracks on current paginator page
 		maxLen := int(math.Min(
 			float64(i+perPage),
-			float64(len(ctx.stream().Queue)-1)))
+			float64(len(ctx.stream().Queue))))
 
 		for j := i; j <= maxLen; j++ {
 			formatName := "**%s** – %s"

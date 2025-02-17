@@ -12,7 +12,8 @@ func Next(ctx Ctx) {
 	}
 
 	if err := ctx.stream().Next(); err != nil {
-		ctx.reply(err.Error())
+		ctx.reply("Error nexting: " + err.Error())
+		fmt.Println("Error nexting:", err)
 	} else {
 		ctx.reply("Now playing: " + ctx.stream().Current())
 	}

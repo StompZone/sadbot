@@ -67,6 +67,9 @@ func New(vc *discordgo.VoiceConnection) *Stream {
 // Play starts playback of song with current SongIndex and attempts to skip
 // to next song in queue on current song end or on send event to Stop channel.
 func (s *Stream) Play() error {
+	if len(s.Queue) == 0 {
+		return errors.New("either last song in the queue or no songs in it")
+	}
 	s.Playing = true
 
 	for len(s.Queue) > 0 && s.SongIndex >= 0 && s.SongIndex < len(s.Queue) && s.Playing {
@@ -187,25 +190,11 @@ func (s *Stream) SetRepeat(state string) error {
 // state to 'single' it will still skip to next song. Kills current playback by
 // sending to Stop channel.
 func (s *Stream) Next() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// FIXME: somewhere here an error occurs and bot remains unoperational after
-	// queue has finished.
-	s.SongIndex++
-
-	if s.SongIndex >= len(s.Queue) {
-		switch s.Repeat {
-		case RepeatAll:
-			s.SongIndex = 0
-		case RepeatOff:
-			s.SongIndex--
-			return errors.New("either last song in the queue or no songs in it")
-		}
+	if len(s.Queue) == 0 || s.SongIndex >= len(s.Queue)-1 {
+		return errors.New("either last song in the queue or no songs in it")
 	}
-
-	s.Stop <- true
-	return nil
+	s.SongIndex++
+	return s.Play()
 }
 
 // Prev skips to previous song unconditionally. Means even if user has set
