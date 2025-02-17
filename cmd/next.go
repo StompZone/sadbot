@@ -1,6 +1,9 @@
 package cmd
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/stompzone/sadbot/utils"
+)
 
 // Next calls current guild's stream Next method. On success replies
 // with current track name.
@@ -12,8 +15,8 @@ func Next(ctx Ctx) {
 	}
 
 	if err := ctx.stream().Next(); err != nil {
+		utils.ErrorLogger.Println("Error nexting:", err)
 		ctx.reply("Error nexting: " + err.Error())
-		fmt.Println("Error nexting:", err)
 	} else {
 		ctx.reply("Now playing: " + ctx.stream().Current())
 	}

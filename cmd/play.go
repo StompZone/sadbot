@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"time"
 	"github.com/stompzone/sadbot/utils"
 	"strings"
 )
@@ -22,9 +22,9 @@ func Play(ctx Ctx) {
 
 	// join voice in case bot is not in one
 	if ctx.stream().V == nil {
-		err := join(ctx)
+		err := joinWithRetry(ctx, 3)
 		if err != nil {
-			fmt.Println("Failed to join voice channel:", err)
+			utils.ErrorLogger.Println("Failed to join voice channel:", err)
 			return
 		}
 	}
@@ -48,7 +48,20 @@ func Play(ctx Ctx) {
 	go Queue(ctx)
 
 	if err := ctx.stream().Play(); err != nil {
+		utils.ErrorLogger.Println("Error streaming:", err)
 		ctx.reply("Error streaming: " + err.Error())
-		fmt.Println("Error streaming:", err)
 	}
+}
+
+// joinWithRetry attempts to join the voice channel with retries.
+func joinWithRetry(ctx Ctx, retries int) error {
+	for i := 0; i < retries; i++ {
+		err := join(ctx)
+		if err == nil {
+			return nil
+		}
+		utils.ErrorLogger.Printf("Failed to join voice channel (attempt %d/%d): %v", i+1, retries, err)
+		time.Sleep(2 * time.Second)
+	}
+	return fmt.Errorf("timeout waiting for voice")
 }

@@ -79,7 +79,7 @@ func (s *Stream) Play() error {
 		go func() {
 			err := utils.PlayAudioFile(s.V, s.Queue[s.SongIndex].Source, s.Stop, &s.Playing)
 			if err != nil {
-				fmt.Println("Error playing audio file: ", err)
+				utils.ErrorLogger.Println("Error playing audio file:", err)
 			}
 			done <- true
 		}()
@@ -90,7 +90,7 @@ func (s *Stream) Play() error {
 		case <-done:
 			if s.Repeat != RepeatSingle {
 				if err := s.Next(); err != nil {
-					fmt.Println("error nexting:", err)
+					utils.ErrorLogger.Println("error nexting:", err)
 					s.Playing = false
 					return err
 				}

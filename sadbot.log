@@ -1,0 +1,3 @@
+INFO: 2025/02/17 06:16:42 main.go:32: sadbot is now running. Press Ctrl-C to exit.
+INFO: 2025/02/17 06:19:56 main.go:32: sadbot is now running. Press Ctrl-C to exit.
+ERROR: 2025/02/17 06:20:30 play.go:26: Failed to join voice channel: timeout waiting for voice
